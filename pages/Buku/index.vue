@@ -1,23 +1,39 @@
 <script setup>
-const supabase = useSupabaseClient();
+useHead({
+  title: "PERPUS DIGITAL",
+  meta: [
+    {
+      name: "description",
+      content: "Halaman detail buku",
+    },
+  ],
+});
 
-const books = ref([]);
-const Semua = ref(0);
+const supabase = useSupabaseClient();
 const keyword = ref("");
+const books = ref([]);
+const Jumlah = ref(0);
+
 
 const getBooks = async () => {
-  const { data, error } = await supabase.from("buku").select(`*, kategori_buku(*)`);
-  // .ilike('judul', `%${keyword.value}%`)
+  const { data, error } = await supabase.from("buku").select(`*, kategori_buku(*)`)
+  .ilike('judul', `%${keyword.value}%`);
   if (data) books.value = data;
+  if (error) throw error;
+
 };
 
-const getSemuabuku = async () => {
-  const { data, count } = await supabase.from("buku").select("*", { count: "exact" });
-  if (data) Semua.value = count;
+const totalbuku = async () => {
+  const { data, error } = await supabase
+    .from("jumlahbuku")
+    .select()
+    .single()
+  if (data) Jumlah.value = data.jumlahbuku
 };
 
 onMounted(() => {
   getBooks();
+  totalbuku()
 });
 </script>
 
@@ -28,11 +44,11 @@ onMounted(() => {
         <h2 class="text-center text-white my-4">BUKU</h2>
         <div class="my-3">
           <form @submit.prevent="getBooks">
-            <input v-model="keyword" type="search" class="form-control rounded-5 bi bi-search" placeholder="Cari buku disini......" />
+            <input v-model="keyword" type="search" class="form-control rounded-5" placeholder="Cari buku disini......" />
           </form>
         </div>
       </div>
-      <div class="my-3 text-white">menampilkan {{ books.length }} dari {{ Semua }}</div>
+      <div class="my-3 text-white">Menampilkan {{ books.length }} dari {{ Jumlah }}</div>
       <div class="row">
         <div v-for="(book, i) in books" :key="i" class="col-lg-2">
           <div class="card-mb-3">
@@ -71,6 +87,11 @@ onMounted(() => {
   object-fit: cover;
   object-position: 0 30;
 }
+
+.btn {
+  background-color: rgb(14, 154, 235);
+}
+</style>
 
 .btn {
   background-color: rgb(14, 154, 235);
